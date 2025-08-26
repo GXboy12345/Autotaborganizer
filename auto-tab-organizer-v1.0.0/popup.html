@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto Tab Organizer</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 12px; width: 240px; }
+      button { padding: 8px 10px; font-size: 14px; }
+      .row { display: flex; gap: 8px; align-items: center; }
+      .small { color: #666; font-size: 12px; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <button id="organizeBtn">Organize all windows</button>
+    </div>
+    <div class="small">
+      Configure API settings in <a href="#" id="optionsLink">Options</a>.
+    </div>
+    <div class="small" id="status"></div>
+    <div class="small" id="details"></div>
+    <script src="popup.js"></script>
+  </body>
+  </html>
+
+
