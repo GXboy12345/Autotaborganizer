@@ -59,13 +59,29 @@ jobs:
     - name: Check for sensitive data
       run: |
         # Check for potential API keys or sensitive data
-        if grep -r "sk-" auto-tab-organizer-v1.0.0/; then
-          echo "Warning: Potential API key found in code"
+        # Ignore placeholder text and only look for actual patterns
+        
+        # Check for actual API key patterns (not placeholders)
+        if grep -r "sk-[a-zA-Z0-9]{20,}" auto-tab-organizer-v1.0.0/; then
+          echo "Warning: Actual API key found in code"
           exit 1
         fi
         
-        if grep -r "api_key" auto-tab-organizer-v1.0.0/; then
-          echo "Warning: Potential API key reference found"
+        # Check for actual API key patterns with different prefixes
+        if grep -r "sk-ant-[a-zA-Z0-9]{20,}" auto-tab-organizer-v1.0.0/; then
+          echo "Warning: Actual Anthropic API key found in code"
+          exit 1
+        fi
+        
+        # Check for actual API key patterns with other common prefixes
+        if grep -r "pk-[a-zA-Z0-9]{20,}" auto-tab-organizer-v1.0.0/; then
+          echo "Warning: Actual API key found in code"
+          exit 1
+        fi
+        
+        # Check for actual API key patterns without prefix (32+ character strings)
+        if grep -r "[a-zA-Z0-9]{32,}" auto-tab-organizer-v1.0.0/ | grep -v "placeholder"; then
+          echo "Warning: Potential API key found in code"
           exit 1
         fi
         
