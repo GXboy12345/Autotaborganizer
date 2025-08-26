@@ -9,6 +9,28 @@ async function getApiConfig() {
   };
 }
 
+function sendProgress(phase, progress, details) {
+  chrome.runtime.sendMessage({
+    type: 'progress',
+    phase,
+    progress,
+    details
+  }).catch(() => {
+    // Ignore errors if popup is closed
+  });
+}
+
+function sendError(phase, error) {
+  chrome.runtime.sendMessage({
+    type: 'progress',
+    phase: 'error',
+    errorPhase: phase,
+    details: error
+  }).catch(() => {
+    // Ignore errors if popup is closed
+  });
+}
+
 async function extractContentInTab(tabId) {
   try {
     // Add timeout to prevent hanging
@@ -43,7 +65,15 @@ async function extractContentInTab(tabId) {
 
 async function enrichTabsWithContent(tabs) {
   const enriched = [];
-  for (const t of tabs) {
+  const totalTabs = tabs.length;
+  
+  for (let i = 0; i < tabs.length; i++) {
+    const t = tabs[i];
+    
+    // Update progress
+    const progress = Math.round((i / totalTabs) * 25); // 0-25% for extraction
+    sendProgress('extract', progress, `Extracting content from tab ${i + 1} of ${totalTabs}`);
+    
     // Skip system/extension scheme tabs
     if (!t.url || !/^https?:/i.test(t.url) || t.url.startsWith('chrome://') || t.url.startsWith('chrome-extension://')) {
       enriched.push({ id: t.id, title: t.title, url: t.url });
@@ -59,6 +89,9 @@ async function enrichTabsWithContent(tabs) {
     const content = await extractContentInTab(t.id);
     enriched.push({ id: t.id, title: t.title, url: t.url, content });
   }
+  
+  sendProgress('extract_complete', 25, `Extracted content from ${enriched.length} tabs`);
+  
   console.log('[extension] enriched tabs', enriched.map(x => ({ 
     id: x.id, 
     hasContent: Boolean(x.content && !x.content.error),
@@ -110,6 +143,7 @@ async function fetchGroupsForWindow(tabs) {
   
   if (!apiKey) {
     // No key: graceful fallback
+    sendProgress('api', 50, 'No API key configured, using fallback grouping');
     const fb = fallbackGroupByDomain(tabs);
     console.log('[extension] fallback: missing API key, groups', fb.groups.map(g => ({ name: g.name, n: g.tabIds.length })));
     return { 
@@ -121,6 +155,8 @@ async function fetchGroupsForWindow(tabs) {
       } 
     };
   }
+
+  sendProgress('api', 30, 'Preparing API request...');
 
   const systemPrompt = [
     'You are a browser tab organizer. Group tabs by their PRIMARY TOPIC/SUBJECT, not by content type.',
@@ -186,6 +222,8 @@ async function fetchGroupsForWindow(tabs) {
 
   console.log('[extension] calling LLM', { url: apiUrl, model: payload.model, tabsCount: tabs.length });
   
+  sendProgress('api', 40, 'Sending request to API...');
+  
   try {
     const startedAt = Date.now();
     const resp = await fetch(apiUrl, {
@@ -202,10 +240,14 @@ async function fetchGroupsForWindow(tabs) {
       throw new Error(`API responded with ${resp.status}: ${resp.statusText}`);
     }
 
+    sendProgress('api_complete', 50, `API response received (${ms}ms)`);
+
     const data = await resp.json();
     const choice = data?.choices?.[0];
     const content = choice?.message?.content || choice?.delta?.content || '';
     console.log('[extension] LLM responded', { status: resp.status, ms, contentPreview: String(content).slice(0, 200) });
+    
+    sendProgress('parse', 60, 'Parsing API response...');
     
     let parsed = null;
     try {
@@ -220,6 +262,8 @@ async function fetchGroupsForWindow(tabs) {
       console.warn('[extension] raw content:', content);
       parsed = fallbackGroupByDomain(tabs);
     }
+
+    sendProgress('parse_complete', 75, 'Response parsed successfully');
 
     // sanitize
     const validIds = new Set(tabs.map(t => t.id));
@@ -256,6 +300,7 @@ async function fetchGroupsForWindow(tabs) {
     };
   } catch (err) {
     console.error('[extension] LLM API error:', err?.message || err);
+    sendError('api', err?.message || 'API request failed');
     const fb = fallbackGroupByDomain(tabs);
     console.log('[extension] fallback: error during LLM call, groups', fb.groups.map(g => ({ name: g.name, n: g.tabIds.length })));
     return { 
@@ -271,9 +316,13 @@ async function fetchGroupsForWindow(tabs) {
 
 async function organizeWindow(windowId) {
   const tabs = await chrome.tabs.query({ windowId });
-  if (!tabs || tabs.length === 0) return;
+  if (!tabs || tabs.length === 0) return { groups: [], meta: { source: 'no_tabs' } };
+  
+  sendProgress('group', 80, `Creating groups for ${tabs.length} tabs...`);
+  
   const enriched = await enrichTabsWithContent(tabs);
-  const { groups } = await fetchGroupsForWindow(enriched);
+  const result = await fetchGroupsForWindow(enriched);
+  const { groups, meta } = result;
 
   for (const group of groups) {
     console.log('[extension] creating group', { name: group.name, color: group.color, n: group.tabIds?.length });
@@ -285,13 +334,32 @@ async function organizeWindow(windowId) {
     if (color) update.color = color;
     await chrome.tabGroups.update(groupId, update);
   }
+  
+  sendProgress('group_complete', 100, `Created ${groups.length} groups`);
+  
+  return { groups, meta };
 }
 
 async function organizeAllWindows() {
   const wins = await chrome.windows.getAll();
+  let totalTabs = 0;
+  let totalGroups = 0;
+  let processingSource = 'unknown';
+  
   for (const w of wins) {
-    await organizeWindow(w.id);
+    const result = await organizeWindow(w.id);
+    if (result.groups) {
+      totalTabs += result.meta?.totalTabs || 0;
+      totalGroups += result.groups.length;
+      processingSource = result.meta?.source || processingSource;
+    }
   }
+  
+  return {
+    totalTabs,
+    totalGroups,
+    source: processingSource
+  };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -299,11 +367,26 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     (async () => {
       try {
         console.log('[extension] starting organization...');
-        await organizeAllWindows();
-        console.log('[extension] organization complete');
-        sendResponse({ ok: true, meta: { source: 'success' } });
+        const result = await organizeAllWindows();
+        console.log('[extension] organization complete', result);
+        
+        // Determine if this was a successful AI operation or fallback
+        const isAISuccess = result.source === 'llm_or_sanitized';
+        const isFallback = result.source === 'fallback_missing_key' || result.source === 'fallback_error';
+        
+        sendResponse({ 
+          ok: true, 
+          meta: { 
+            source: result.source,
+            totalTabs: result.totalTabs,
+            totalGroups: result.totalGroups,
+            isAISuccess,
+            isFallback
+          } 
+        });
       } catch (e) {
         console.error('[extension] organization failed:', e);
+        sendError('group', e?.message || String(e));
         sendResponse({ ok: false, error: e?.message || String(e) });
       }
     })();

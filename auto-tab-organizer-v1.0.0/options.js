@@ -1,8 +1,8 @@
 const apiKeyEl = document.getElementById('apiKey');
 const apiUrlEl = document.getElementById('apiUrl');
 const modelEl = document.getElementById('model');
-const saveBtn = document.getElementById('saveBtn');
-const savedEl = document.getElementById('saved');
+const configForm = document.getElementById('configForm');
+const statusMessage = document.getElementById('statusMessage');
 
 async function init() {
   const data = await chrome.storage.local.get(['apiKey', 'apiUrl', 'model']);
@@ -11,21 +11,53 @@ async function init() {
   modelEl.value = data.model || 'deepseek-ai/DeepSeek-R1';
 }
 
-saveBtn.addEventListener('click', async () => {
+configForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
   const apiKey = apiKeyEl.value.trim();
   const apiUrl = apiUrlEl.value.trim();
   const model = modelEl.value.trim();
   
-  await chrome.storage.local.set({ 
-    apiKey, 
-    apiUrl, 
-    model 
-  });
+  // Validate URL format
+  if (apiUrl && !isValidUrl(apiUrl)) {
+    showStatus('Please enter a valid URL', 'error');
+    return;
+  }
   
-  savedEl.textContent = 'Saved';
-  setTimeout(() => (savedEl.textContent = ''), 1200);
+  try {
+    await chrome.storage.local.set({ 
+      apiKey, 
+      apiUrl, 
+      model 
+    });
+    
+    showStatus('Configuration saved successfully!', 'success');
+  } catch (error) {
+    showStatus('Failed to save configuration', 'error');
+    console.error('Save error:', error);
+  }
 });
 
+function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function showStatus(message, type = 'success') {
+  statusMessage.textContent = message;
+  statusMessage.className = `status-message show ${type}`;
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    statusMessage.classList.remove('show');
+  }, 3000);
+}
+
+// Initialize on load
 init();
 
 

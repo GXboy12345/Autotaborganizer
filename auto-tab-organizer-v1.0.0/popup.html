@@ -5,21 +5,411 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Auto Tab Organizer</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 12px; width: 240px; }
-      button { padding: 8px 10px; font-size: 14px; }
-      .row { display: flex; gap: 8px; align-items: center; }
-      .small { color: #666; font-size: 12px; margin-top: 8px; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        width: 320px;
+        min-height: 400px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        overflow: hidden;
+      }
+      
+      .container {
+        padding: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      
+      .title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      
+      .subtitle {
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      
+      .main-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 16px;
+        backdrop-filter: blur(10px);
+      }
+      
+      .main-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+      
+      .main-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      .options-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 12px;
+        text-align: center;
+        display: block;
+        margin-bottom: 20px;
+        transition: opacity 0.2s ease;
+      }
+      
+      .options-link:hover {
+        opacity: 1;
+      }
+      
+      .progress-container {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: none;
+      }
+      
+      .progress-container.active {
+        display: block;
+      }
+      
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      
+      .progress-title {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .progress-percentage {
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      
+      .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4ade80, #22c55e);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+      
+      .status-list {
+        list-style: none;
+      }
+      
+      .status-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+      
+      .status-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: bold;
+      }
+      
+      .status-icon.pending {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.6);
+      }
+      
+      .status-icon.active {
+        background: #fbbf24;
+        color: #92400e;
+        animation: pulse 1.5s infinite;
+      }
+      
+      .status-icon.complete {
+        background: #10b981;
+        color: white;
+      }
+      
+      .status-icon.error {
+        background: #ef4444;
+        color: white;
+      }
+      
+      .status-text {
+        flex: 1;
+      }
+      
+      .status-details {
+        font-size: 10px;
+        opacity: 0.7;
+        margin-left: 24px;
+        margin-top: 2px;
+      }
+      
+      .results-container {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: none;
+      }
+      
+      .results-container.active {
+        display: block;
+      }
+      
+      .results-title {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      
+      .results-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      
+      .stat-item {
+        text-align: center;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+      }
+      
+      .stat-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #4ade80;
+      }
+      
+      .stat-label {
+        font-size: 10px;
+        opacity: 0.8;
+        margin-top: 2px;
+      }
+      
+      .error-container {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 12px;
+        display: none;
+      }
+      
+      .error-container.active {
+        display: block;
+      }
+      
+      .warning-container {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+        display: none;
+        backdrop-filter: blur(10px);
+      }
+      
+      .warning-container.active {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      
+      .warning-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      
+      .warning-content {
+        flex: 1;
+      }
+      
+      .warning-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #fbbf24;
+        margin-bottom: 4px;
+      }
+      
+      .warning-message {
+        font-size: 11px;
+        opacity: 0.9;
+        line-height: 1.4;
+      }
+      
+      .warning-message a {
+        color: #fbbf24;
+        text-decoration: underline;
+        font-weight: 500;
+      }
+      
+      .warning-message a:hover {
+        color: #f59e0b;
+      }
+      
+      .error-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: #fca5a5;
+        margin-bottom: 4px;
+      }
+      
+      .error-message {
+        font-size: 11px;
+        opacity: 0.8;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateY(10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      
+      .progress-container.active,
+      .results-container.active {
+        animation: slideIn 0.3s ease;
+      }
     </style>
   </head>
   <body>
-    <div class="row">
-      <button id="organizeBtn">Organize all windows</button>
+    <div class="container">
+      <div class="header">
+        <div class="title">Auto Tab Organizer</div>
+        <div class="subtitle">Intelligent tab grouping with AI</div>
+      </div>
+      
+      <button id="organizeBtn" class="main-button">
+        <span id="organizeBtnText">Organize All Windows</span>
+      </button>
+      
+      <a href="#" id="optionsLink" class="options-link">
+        Configure API Settings
+      </a>
+      
+      <div id="warningContainer" class="warning-container">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-content">
+          <div class="warning-title">No API Key Configured</div>
+          <div class="warning-message">
+            Tabs will be grouped by domain instead of topic. 
+            <a href="#" id="configureApiLink">Configure API</a> for intelligent organization.
+          </div>
+        </div>
+      </div>
+      
+      <div id="existingGroupsWarning" class="warning-container">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-content">
+          <div class="warning-title">Existing Groups Detected</div>
+          <div class="warning-message">
+            Current tab groups will be overwritten. 
+            <a href="#" id="learnMoreLink">Learn more</a> about the organization process.
+          </div>
+        </div>
+      </div>
+      
+      <div id="progressContainer" class="progress-container">
+        <div class="progress-header">
+          <div class="progress-title">Processing...</div>
+          <div class="progress-percentage" id="progressPercentage">0%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <ul class="status-list" id="statusList">
+          <li class="status-item">
+            <div class="status-icon pending" id="statusExtract">○</div>
+            <div class="status-text">Extracting tab content</div>
+          </li>
+          <li class="status-item">
+            <div class="status-icon pending" id="statusAPI">○</div>
+            <div class="status-text">Sending to API</div>
+          </li>
+          <li class="status-item">
+            <div class="status-icon pending" id="statusParse">○</div>
+            <div class="status-text">Parsing response</div>
+          </li>
+          <li class="status-item">
+            <div class="status-icon pending" id="statusGroup">○</div>
+            <div class="status-text">Creating groups</div>
+          </li>
+        </ul>
+        <div class="status-details" id="statusDetails"></div>
+      </div>
+      
+      <div id="resultsContainer" class="results-container">
+        <div class="results-title">Organization Complete!</div>
+        <div class="results-stats">
+          <div class="stat-item">
+            <div class="stat-value" id="statTabs">0</div>
+            <div class="stat-label">Tabs Processed</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statGroups">0</div>
+            <div class="stat-label">Groups Created</div>
+          </div>
+        </div>
+        <div class="stat-item" style="grid-column: 1 / -1;">
+          <div class="stat-value" id="statSource">API</div>
+          <div class="stat-label">Processing Method</div>
+        </div>
+      </div>
+      
+      <div id="errorContainer" class="error-container">
+        <div class="error-title">Error</div>
+        <div class="error-message" id="errorMessage"></div>
+      </div>
     </div>
-    <div class="small">
-      Configure API settings in <a href="#" id="optionsLink">Options</a>.
-    </div>
-    <div class="small" id="status"></div>
-    <div class="small" id="details"></div>
+    
     <script src="popup.js"></script>
   </body>
   </html>

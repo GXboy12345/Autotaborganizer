@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto Tab Organizer - Help</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 40px;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      
+      .title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .subtitle {
+        font-size: 18px;
+        opacity: 0.8;
+        line-height: 1.5;
+      }
+      
+      .section {
+        margin-bottom: 32px;
+      }
+      
+      .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #a2d2f5;
+      }
+      
+      .content {
+        font-size: 16px;
+        line-height: 1.6;
+        opacity: 0.9;
+      }
+      
+      .warning-box {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      
+      .warning-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fbbf24;
+        margin-bottom: 8px;
+      }
+      
+      .warning-text {
+        font-size: 14px;
+        opacity: 0.9;
+        line-height: 1.5;
+      }
+      
+      .step-list {
+        list-style: none;
+        counter-reset: step-counter;
+      }
+      
+      .step-list li {
+        counter-increment: step-counter;
+        margin-bottom: 16px;
+        padding-left: 40px;
+        position: relative;
+      }
+      
+      .step-list li::before {
+        content: counter(step-counter);
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: #a2d2f5;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="title">How It Works</div>
+        <div class="subtitle">Understanding the Auto Tab Organizer process</div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">What Happens to Existing Groups?</div>
+        <div class="warning-box">
+          <div class="warning-title">⚠️ Important Notice</div>
+          <div class="warning-text">
+            When you run the Auto Tab Organizer, any existing tab groups will be <strong>completely replaced</strong> with new AI-generated groups. This process cannot be undone, so make sure you're ready to reorganize your tabs.
+          </div>
+        </div>
+        <div class="content">
+          The extension creates a fresh organization based on the current content of your tabs, so your previous grouping structure will be lost. If you want to preserve your current organization, consider taking a screenshot or manually noting your current group structure.
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">The Organization Process</div>
+        <div class="content">
+          <ol class="step-list">
+            <li><strong>Content Extraction:</strong> The extension analyzes each tab's title, description, and content to understand what each page is about.</li>
+            <li><strong>AI Analysis:</strong> Your configured AI service processes the tab data and determines logical groupings based on topics and subjects.</li>
+            <li><strong>Group Creation:</strong> New tab groups are created with descriptive names and colors based on the AI's analysis.</li>
+            <li><strong>Tab Assignment:</strong> Each tab is moved into its appropriate group, replacing any existing organization.</li>
+          </ol>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">Fallback Mode</div>
+        <div class="content">
+          If no API key is configured or if the AI service is unavailable, the extension will fall back to domain-based grouping. This means tabs will be grouped by their website domain (e.g., all GitHub tabs together, all Google tabs together) rather than by topic.
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">Best Practices</div>
+        <div class="content">
+          <ul style="list-style: disc; margin-left: 20px; line-height: 1.6;">
+            <li>Configure your API key for the best results</li>
+            <li>Close unnecessary tabs before organizing</li>
+            <li>Make sure all tabs are fully loaded</li>
+            <li>Consider organizing tabs when you have a clear set of related pages open</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>

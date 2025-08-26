@@ -71,16 +71,6 @@ The extension operates through three phases:
 
 Your tab content is sent to your configured API service—no data passes through any intermediate servers. API keys are stored securely in Chrome's extension storage. The extension functions in fallback mode (domain-based grouping) when no API key is provided.
 
-## Troubleshooting
-
-**No API Key**: The extension defaults to domain-based grouping. This works immediately but lacks the intelligent topic organization.
-
-**API Errors**: Verify your API key and URL in the options page. Check that your model name matches your service's available models.
-
-**No Response**: Ensure your API endpoint is accessible and your model name is correct. The extension will fall back to domain grouping if the API call fails.
-
-**Content Extraction Issues**: Some tabs (chrome:// URLs, incomplete pages) may not allow content extraction. These are grouped by domain automatically.
-
 ## Technical Details
 
 The extension uses Chrome's `chrome.scripting.executeScript` API to extract content from tabs. This requires the `scripting` permission and works only on `https://` and `http://` URLs. The LLM prompt is designed to produce valid JSON responses, with fallback parsing for malformed responses.

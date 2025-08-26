@@ -1,8 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Auto Tab Organizer (LLM)",
-  "version": "0.1.0",
-  "description": "Organize tabs into logical groups using an LLM.",
+  "name": "Auto Tab Organizer",
+  "version": "1.0.0",
+  "description": "Intelligent tab organization using any AI service",
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
   "permissions": [
     "tabs",
     "tabGroups",
@@ -17,7 +23,8 @@
   },
   "action": {
     "default_title": "Organize Tabs",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
   },
   "options_page": "options.html"
 }

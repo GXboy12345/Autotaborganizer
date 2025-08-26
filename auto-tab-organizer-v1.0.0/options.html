@@ -5,39 +5,263 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Auto Tab Organizer Options</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; max-width: 640px; }
-      label { display: block; margin-bottom: 4px; font-weight: 600; }
-      input { width: 100%; padding: 8px; margin-bottom: 12px; }
-      .hint { color: #666; font-size: 12px; margin-top: 6px; }
-      button { margin-top: 12px; padding: 8px 10px; }
-      .row { display: flex; align-items: center; gap: 8px; }
-      .section { margin-bottom: 24px; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 40px;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .subtitle {
+        font-size: 16px;
+        opacity: 0.8;
+        line-height: 1.5;
+      }
+      
+      .form-group {
+        margin-bottom: 24px;
+      }
+      
+      .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+      
+      .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .form-input:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+      }
+      
+      .form-hint {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+      
+      .button-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 32px;
+      }
+      
+      .save-button {
+        background: linear-gradient(45deg, #4ade80, #22c55e);
+        border: none;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      }
+      
+      .save-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+      }
+      
+      .save-button:active {
+        transform: translateY(0);
+      }
+      
+      .status-message {
+        color: #4ade80;
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      .status-message.show {
+        opacity: 1;
+      }
+      
+      .status-message.error {
+        color: #ef4444;
+      }
+      
+      .examples {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .examples-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .example-item {
+        margin-bottom: 16px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        border-left: 3px solid #4ade80;
+      }
+      
+      .example-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #4ade80;
+      }
+      
+      .example-config {
+        font-size: 12px;
+        opacity: 0.8;
+        line-height: 1.4;
+      }
+      
+      .example-config strong {
+        color: rgba(255, 255, 255, 0.9);
+      }
     </style>
   </head>
   <body>
-    <h2>LLM Configuration</h2>
-    <div class="section">
-      <label for="apiKey">API Key</label>
-      <input id="apiKey" type="password" placeholder="your-api-key-here" />
-      <div class="hint">Your API key for the chat completion service</div>
+    <div class="container">
+      <div class="header">
+        <div class="title">API Configuration</div>
+        <div class="subtitle">Configure your preferred AI service for intelligent tab organization</div>
+      </div>
+      
+      <form id="configForm">
+        <div class="form-group">
+          <label for="apiKey" class="form-label">API Key</label>
+          <input 
+            type="password" 
+            id="apiKey" 
+            class="form-input" 
+            placeholder="sk-... or your API key"
+          />
+          <div class="form-hint">
+            Your authentication token for the chat completion service. Leave empty to use domain-based grouping.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="apiUrl" class="form-label">API URL</label>
+          <input 
+            type="url" 
+            id="apiUrl" 
+            class="form-input" 
+            placeholder="https://api.openai.com/v1/chat/completions"
+          />
+          <div class="form-hint">
+            The endpoint URL for your chat completion service. Must follow OpenAI-compatible format.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="model" class="form-label">Model</label>
+          <input 
+            type="text" 
+            id="model" 
+            class="form-input" 
+            placeholder="gpt-4 or your model name"
+          />
+          <div class="form-hint">
+            The specific model name to use for chat completions (e.g., gpt-4, claude-3-sonnet-20240229).
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button type="submit" class="save-button">Save Configuration</button>
+          <div class="status-message" id="statusMessage">Configuration saved!</div>
+        </div>
+      </form>
+      
+      <div class="examples">
+        <div class="examples-title">Example Configurations</div>
+        
+        <div class="example-item">
+          <div class="example-name">OpenAI GPT-4</div>
+          <div class="example-config">
+            <strong>API URL:</strong> https://api.openai.com/v1/chat/completions<br>
+            <strong>Model:</strong> gpt-4
+          </div>
+        </div>
+        
+        <div class="example-item">
+          <div class="example-name">Anthropic Claude</div>
+          <div class="example-config">
+            <strong>API URL:</strong> https://api.anthropic.com/v1/messages<br>
+            <strong>Model:</strong> claude-3-sonnet-20240229
+          </div>
+        </div>
+        
+        <div class="example-item">
+          <div class="example-name">Local Ollama</div>
+          <div class="example-config">
+            <strong>API URL:</strong> http://localhost:11434/v1/chat/completions<br>
+            <strong>Model:</strong> llama2<br>
+            <strong>API Key:</strong> (leave empty)
+          </div>
+        </div>
+      </div>
     </div>
     
-    <div class="section">
-      <label for="apiUrl">API URL</label>
-      <input id="apiUrl" placeholder="https://llm.chutes.ai/v1/chat/completions" />
-      <div class="hint">The endpoint URL for your chat completion service</div>
-    </div>
-    
-    <div class="section">
-      <label for="model">Model</label>
-      <input id="model" placeholder="deepseek-ai/DeepSeek-R1" />
-      <div class="hint">The model name to use for chat completions</div>
-    </div>
-    
-    <div class="row">
-      <button id="saveBtn">Save</button>
-      <div id="saved" class="hint"></div>
-    </div>
     <script src="options.js"></script>
   </body>
   </html>
