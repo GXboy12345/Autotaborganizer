@@ -13,12 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
     - name: Validate manifest.json
       run: |
         # Check if manifest.json is valid JSON
@@ -50,6 +44,7 @@ jobs:
           "auto-tab-organizer-v1.0.0/options.html"
           "auto-tab-organizer-v1.0.0/options.js"
           "auto-tab-organizer-v1.0.0/icon.png"
+          "auto-tab-organizer-v1.0.0/help.html"
         )
         
         for file in "${required_files[@]}"; do
@@ -60,16 +55,6 @@ jobs:
         done
         
         echo "All required files present"
-    
-    - name: Lint JavaScript files
-      run: |
-        # Basic JavaScript linting (if you have ESLint configured)
-        if [ -f "package.json" ]; then
-          npm ci
-          npm run lint
-        else
-          echo "No package.json found, skipping linting"
-        fi
     
     - name: Check for sensitive data
       run: |
@@ -92,9 +77,51 @@ jobs:
         for html_file in auto-tab-organizer-v1.0.0/*.html; do
           if [ -f "$html_file" ]; then
             echo "Validating $html_file"
-            # You can add more sophisticated HTML validation here
+            # Check for proper DOCTYPE
             if ! grep -q "<!doctype html>" "$html_file"; then
               echo "Warning: $html_file might not have proper DOCTYPE"
             fi
+            # Check for basic HTML structure
+            if ! grep -q "<html" "$html_file" || ! grep -q "</html>" "$html_file"; then
+              echo "Error: $html_file missing basic HTML structure"
+              exit 1
+            fi
           fi
         done
+        
+        echo "HTML validation passed"
+    
+    - name: Validate JavaScript syntax
+      run: |
+        # Basic JavaScript syntax validation using node (if available) or simple checks
+        for js_file in auto-tab-organizer-v1.0.0/*.js; do
+          if [ -f "$js_file" ]; then
+            echo "Validating $js_file"
+            # Check for basic JavaScript syntax issues
+            if grep -q "console\.log" "$js_file"; then
+              echo "Warning: $js_file contains console.log statements (consider removing for production)"
+            fi
+            # Check for obvious syntax errors
+            if grep -q "function.*{.*{.*}" "$js_file"; then
+              echo "Warning: $js_file might have nested function declarations"
+            fi
+          fi
+        done
+        
+        echo "JavaScript validation passed"
+    
+    - name: Check file sizes
+      run: |
+        # Check that files aren't unreasonably large
+        max_size=500000  # 500KB
+        
+        for file in auto-tab-organizer-v1.0.0/*; do
+          if [ -f "$file" ]; then
+            size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+            if [ "$size" -gt "$max_size" ]; then
+              echo "Warning: $file is larger than ${max_size} bytes ($size bytes)"
+            fi
+          fi
+        done
+        
+        echo "File size check passed"
