@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Validate manifest.json
+      run: |
+        # Check if manifest.json is valid JSON
+        python3 -m json.tool auto-tab-organizer-v1.0.0/manifest.json
+        
+        # Validate required fields
+        python3 -c "
+        import json
+        with open('auto-tab-organizer-v1.0.0/manifest.json') as f:
+            manifest = json.load(f)
+        
+        required_fields = ['manifest_version', 'name', 'version', 'description']
+        for field in required_fields:
+            if field not in manifest:
+                print(f'Missing required field: {field}')
+                exit(1)
+        
+        print('Manifest validation passed')
+        "
+    
+    - name: Check file structure
+      run: |
+        # Ensure all required files exist
+        required_files=(
+          "auto-tab-organizer-v1.0.0/manifest.json"
+          "auto-tab-organizer-v1.0.0/background.js"
+          "auto-tab-organizer-v1.0.0/popup.html"
+          "auto-tab-organizer-v1.0.0/popup.js"
+          "auto-tab-organizer-v1.0.0/options.html"
+          "auto-tab-organizer-v1.0.0/options.js"
+          "auto-tab-organizer-v1.0.0/icon.png"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Missing required file: $file"
+            exit 1
+          fi
+        done
+        
+        echo "All required files present"
+    
+    - name: Lint JavaScript files
+      run: |
+        # Basic JavaScript linting (if you have ESLint configured)
+        if [ -f "package.json" ]; then
+          npm ci
+          npm run lint
+        else
+          echo "No package.json found, skipping linting"
+        fi
+    
+    - name: Check for sensitive data
+      run: |
+        # Check for potential API keys or sensitive data
+        if grep -r "sk-" auto-tab-organizer-v1.0.0/; then
+          echo "Warning: Potential API key found in code"
+          exit 1
+        fi
+        
+        if grep -r "api_key" auto-tab-organizer-v1.0.0/; then
+          echo "Warning: Potential API key reference found"
+          exit 1
+        fi
+        
+        echo "No sensitive data found"
+    
+    - name: Validate HTML
+      run: |
+        # Basic HTML validation
+        for html_file in auto-tab-organizer-v1.0.0/*.html; do
+          if [ -f "$html_file" ]; then
+            echo "Validating $html_file"
+            # You can add more sophisticated HTML validation here
+            if ! grep -q "<!doctype html>" "$html_file"; then
+              echo "Warning: $html_file might not have proper DOCTYPE"
+            fi
+          fi
+        done

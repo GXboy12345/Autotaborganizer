@@ -76,3 +76,11 @@ Your tab content is sent to your configured API service—no data passes through
 The extension uses Chrome's `chrome.scripting.executeScript` API to extract content from tabs. This requires the `scripting` permission and works only on `https://` and `http://` URLs. The LLM prompt is designed to produce valid JSON responses, with fallback parsing for malformed responses.
 
 All in all, this extension provides intelligent tab organization while giving you complete control over which AI service processes your data.
+
+## Contributing
+
+Contributions are very welcome!
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
